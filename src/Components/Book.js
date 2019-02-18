@@ -1,42 +1,68 @@
 import React, { Component } from "react";
 
 class Book extends Component {
-  render() {
-    let thumbnail = this.props.book.imageLinks
-      ? this.props.book.imageLinks.thumbnail
-      : "";
-    return (
-      <div className="book">
-        <div className="book-top">
-          <div
-            className="book-cover"
-            style={{
-              width: 128,
-              height: 193,
-              backgroundImage: `url('${thumbnail}'`
-            }}
-          />
+  handleThumbnails(book) {
+    if (!book.imageLinks) {
+      book.imageLinks = [];
+      book.imageLinks.smallThumbnail = "http://via.placeholder.com/128x158";
+      book.imageLinks.thumbnail =
+        "http://via.placeholder.com/128x188?text=no+cover";
+    }
+  }
 
-          <div className="book-shelf-changer">
-            <select
-              onChange={evt =>
-                this.props.moveBook(this.props.book, evt.target.value)
-              }
-              value={this.props.book.shelf}
-            >
-              <option value="move" disabled>
-                Move to...
-              </option>
-              <option value="currentlyReading">Currently Reading</option>
-              <option value="wantToRead">Want to Read</option>
-              <option value="read">Read</option>
-              <option value="none">None</option>
-            </select>
-          </div>
-        </div>
-        <div className="book-title">{this.props.book.title}</div>
-        <div className="book-authors">{this.props.book.authors}</div>
+  renderShelfSelector(book) {
+    return (
+      <select onChange={this.changeShelf} value={book.shelf}>
+        <option value="move" disabled>
+          Move to...
+        </option>
+        <option value="currentlyReading">Currently Reading</option>
+        <option value="wantToRead">Want to Read</option>
+        <option value="read">Read</option>
+        <option value="none">None</option>
+      </select>
+    );
+  }
+
+  changeShelf = e => {
+    this.props.onUpdate(e.target.value);
+  };
+
+  renderBookInfo(book) {
+    return (
+      <div>
+        <div className="book-title">{book.title}</div>
+        <div className="book-authors">{book.authors}</div>
       </div>
+    );
+  }
+
+  render() {
+    const book = this.props.book;
+    console.log(book);
+
+    this.handleThumbnails(book);
+
+    return (
+      <li>
+        <div className="book">
+          <div className="book-top">
+            <div
+              className="book-cover"
+              title={book.description}
+              style={{
+                width: 128,
+                height: 188,
+                backgroundImage: `url("${book.imageLinks.thumbnail}")`
+              }}
+            />
+            <div className="book-shelf-changer">
+              {this.renderShelfSelector(book)}
+            </div>
+          </div>
+          {this.renderBookInfo(book)}
+        </div>
+      </li>
     );
   }
 }

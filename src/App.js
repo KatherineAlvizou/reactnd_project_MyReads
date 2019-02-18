@@ -1,45 +1,71 @@
 import React from "react";
-import HomePage from "./Components/HomePage";
-import SearchPage from "./Components/SearchPage";
+import HomePage from "./components/HomePage";
+import SearchPage from "./components/SearchPage";
 import * as BooksAPI from "./BooksAPI";
 import { Route } from "react-router-dom";
 import "./App.css";
 
-class BooksApp extends React.Component {
-  state = {
-    books: []
-  };
-  componentDidMount() {
-    BooksAPI.getAll().then(books => {
-      this.setState({ books: books });
-    });
+class App extends React.Component {
+  constructor() {
+      super();
+      this.state = {
+          books: []
+      };
   }
-  moveBook = (book, shelf) => {
-    BooksAPI.update(book, shelf);
-    BooksAPI.getAll().then(books => {
-      this.setState({ books: books });
-    });
+
+  componentDidMount() {
+      this.setBooksState();
+  }
+
+  setBooksState() {
+      BooksAPI.getAll()
+          .then(books => this.setState({
+              books
+          }))
+          .catch(error => console.error("Failed to fetch books", error));
+  }
+
+  changeShelf = (book, shelf) => {
+      BooksAPI.update(book, shelf).then(() => {
+          this.setBooksState();
+      });
   };
 
   render() {
-    return (
-      <div className="app">
-        <Route
-          exact
-          path="/"
-          render={() => (
-            <HomePage books={this.state.books} moveBook={this.moveBook} />
-          )}
-        />
-        <Route
-          path="/search"
-          render={() => (
-            <SearchPage moveBook={this.moveBook} books={this.state.books} />
-          )}
-        />
-      </div>
-    );
+      return ( <
+          div className = "app" >
+          <
+          Route exact path = "/"
+          render = {
+              () => ( <
+                  HomePage books = {
+                      this.state.books
+                  }
+                  onChange = {
+                      this.changeShelf
+                  }
+                  />
+              )
+          }
+          />
+
+          <
+          Route path = "/search"
+          render = {
+              () => ( <
+                  SearchPage books = {
+                      this.state.books
+                  }
+                  onChange = {
+                      this.changeShelf
+                  }
+                  />
+              )
+          }
+          /> <
+          /div>
+      );
   }
 }
 
-export default BooksApp;
+export default App;

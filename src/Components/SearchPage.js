@@ -5,30 +5,54 @@ import Book from "./Book";
 
 class SearchPage extends Component {
   state = {
-    query: "",
-    searchedBooks: []
+    searchResults: [],
+    query: ""
   };
-  updateQuery = query => {
-    this.setState({
-      query: query
-    });
-    this.updateSearchedBooks(query);
-  };
-  updateSearchedBooks = query => {
-    if (query) {
-      BooksAPI.search(query).then(searchedBooks => {
-        if (searchedBooks.error) {
-          this.setState({ searchedBooks: [] });
+
+  search = val => {
+    if (val.length) {
+      BooksAPI.search(val).then(books => {
+        if (books.length > 0) {
+          books = this.assignShelf(books);
+          this.setState(() => {
+            return { searchResults: books };
+          });
         } else {
-          this.setState({ searchedBooks: searchedBooks });
+          this.setState({ searchResults: [] });
+          console.error("Search term not available in database");
         }
-      });
-    } else {
-      this.setState({
-        searchedBooks: []
       });
     }
   };
+
+  assignShelf = books => {
+    let myBooks = this.props.books;
+    books.forEach(book => {
+      book.shelf = "none";
+      myBooks.forEach(myBook => {
+        if (book.id === myBook.id) {
+          book.shelf = myBook.shelf;
+        }
+      });
+    });
+    return books;
+  };
+
+  handleChange = event => {
+    let value = event.target.value;
+    this.setState(() => {
+      return { query: value };
+    });
+    this.search(value);
+  };
+
+  addToShelf = (book, shelf) => {
+    this.props.onChange(book, shelf);
+
+    book.shelf = shelf;
+    this.forceUpdate();
+  };
+
   render() {
     return (
       <div className="search-books">
@@ -41,28 +65,22 @@ class SearchPage extends Component {
               type="text"
               placeholder="Search by title or author"
               value={this.state.query}
-              onChange={evt => this.setState.updateQuery(evt.target.value)}
+              onChange={this.handleChange}
             />
           </div>
         </div>
         <div className="search-books-results">
           <ol className="books-grid">
-            {this.state.searchedBooks.map(searchedBook => {
-              let shelf = "none";
-
-              this.props.books.map(book =>
-                book.id === searchedBook.id ? (shelf = book.shelf) : ""
-              );
-              return (
-                <li key={searchedBook}>
-                  <Book
-                    book={searchedBook}
-                    moveBook={this.props.moveBook}
-                    currentShelf={shelf}
-                  />
-                </li>
-              );
-            })}
+            {this.state.query.length > 0 &&
+              this.state.searchResults.map((book, index) => (
+                <Book
+                  book={book}
+                  key={index}
+                  onUpdate={shelf => {
+                    this.addToShelf(book, shelf);
+                  }}
+                />
+              ))}
           </ol>
         </div>
       </div>
